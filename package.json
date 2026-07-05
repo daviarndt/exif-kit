@@ -1,0 +1,54 @@
+{
+  "name": "exif-kit",
+  "version": "0.2.0",
+  "description": "A friendly command-line toolkit for photographers to inspect and edit photo/video metadata (EXIF, GPS, dates).",
+  "keywords": [
+    "exif",
+    "metadata",
+    "photography",
+    "gps",
+    "exiftool",
+    "cli"
+  ],
+  "homepage": "https://github.com/daviarndt/exif-kit#readme",
+  "bugs": "https://github.com/daviarndt/exif-kit/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daviarndt/exif-kit.git"
+  },
+  "license": "MIT",
+  "author": "Davi Arndt",
+  "type": "module",
+  "bin": {
+    "exifkit": "dist/bin.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.0",
+    "exiftool-vendored": "^30.0.0",
+    "picocolors": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20.18"
+  }
+}
