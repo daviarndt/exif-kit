@@ -17,3 +17,6 @@ venv/
 
 # ExifTool backups (created during local testing)
 *_original
+
+# Internal project notes (kept local only)
+HANDOVER.md
