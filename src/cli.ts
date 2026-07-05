@@ -5,6 +5,7 @@
  * subcommands offer the same operations for direct/scripted use.
  */
 
+import * as fs from "node:fs";
 import { createRequire } from "node:module";
 
 import { confirm } from "@inquirer/prompts";
@@ -19,11 +20,26 @@ import {
   printFullReport,
   printSuccess,
 } from "./display.js";
+import { defaultExportPath, metadataToMarkdown } from "./markdown.js";
 import { expandPaths } from "./paths.js";
 import { planRestore, restore } from "./undo.js";
 
 const require = createRequire(import.meta.url);
 const VERSION: string = require("../package.json").version;
+
+/** Write a Markdown metadata report, guarding against clobbering non-.md files. */
+export function writeMarkdownReport(
+  reports: Parameters<typeof metadataToMarkdown>[0],
+  target: string,
+): void {
+  if (!target.toLowerCase().endsWith(".md")) {
+    throw new UserError(
+      `Export file must end in .md (got "${target}") — this protects you ` +
+        "from accidentally overwriting a photo or video.",
+    );
+  }
+  fs.writeFileSync(target, metadataToMarkdown(reports, { version: VERSION }));
+}
 
 /** An error whose message is meant for the user (no stack trace). */
 export class UserError extends Error {}
@@ -73,6 +89,10 @@ export function buildProgram(): Command {
     .option("-a, --all", "flat alphabetical dump of every tag (raw values)")
     .option("--json", "output raw JSON (machine-readable)")
     .option("-r, --recursive", "recurse into subfolders")
+    .option(
+      "-e, --export [file.md]",
+      "also export the report to a Markdown file (default: <name>.metadata.md)",
+    )
     .action(async (files: string[], opts) => {
       const paths = resolveFiles(files, opts.recursive);
       if (opts.json) {
@@ -83,6 +103,12 @@ export function buildProgram(): Command {
       for (const item of metadata) {
         if (opts.all) printAllTags(item.pretty);
         else printFullReport(item);
+      }
+      if (opts.export) {
+        const target =
+          opts.export === true ? defaultExportPath(paths) : String(opts.export);
+        writeMarkdownReport(metadata, target);
+        printSuccess(`Exported metadata report to ${target}.`);
       }
     });
 

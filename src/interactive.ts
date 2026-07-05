@@ -10,7 +10,9 @@ import pc from "picocolors";
 
 import * as engine from "./engine.js";
 import * as fields from "./fields.js";
+import { writeMarkdownReport } from "./cli.js";
 import { describeFiles, printError, printFullReport, printSuccess } from "./display.js";
+import { defaultExportPath } from "./markdown.js";
 import { expandPaths } from "./paths.js";
 import { planRestore, restore } from "./undo.js";
 
@@ -55,8 +57,28 @@ async function applyGroupedGps(
 async function actionInspect(): Promise<void> {
   const paths = await askFiles();
   if (!paths) return;
-  for (const item of await engine.readFull(paths)) {
+  const metadata = await engine.readFull(paths);
+  for (const item of metadata) {
     printFullReport(item);
+  }
+
+  const wantsExport = await confirm({
+    message: "Export this report to a Markdown (.md) file?",
+    default: false,
+  });
+  if (!wantsExport) return;
+  const target = (
+    await input({
+      message: "Save the report as:",
+      default: defaultExportPath(paths),
+    })
+  ).trim();
+  if (!target) return;
+  try {
+    writeMarkdownReport(metadata, target);
+    printSuccess(`Exported metadata report to ${target}.`);
+  } catch (err) {
+    printError((err as Error).message);
   }
 }
 

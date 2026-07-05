@@ -25,6 +25,7 @@ $ exifkit show IMG_4021.CR3
 ## Features
 
 - 📷 **Inspect** — full report with what matters first (camera, **shutter count**, serial number, exposure, dates, GPS), followed by every remaining tag
+- 📝 **Markdown export** — save any inspect report as a clean `.md` file to archive or share
 - 📍 **GPS editing** — set location by pasting coordinates straight from Google/Apple Maps; remove GPS for privacy
 - 🕑 **Date editing** — fix capture dates, modification dates, or **shift all dates** to fix a wrong camera clock/timezone
 - 📋 **Copy metadata** between files (e.g. restore metadata after an export stripped it)
@@ -72,6 +73,8 @@ exifkit show *.CR3                  # globs work
 exifkit show ~/Photos/trip -r       # whole folders, recursively
 exifkit show photo.jpg --all        # flat alphabetical dump instead
 exifkit show photo.jpg --json       # machine-readable
+exifkit show photo.jpg --export     # also save the report as photo.metadata.md
+exifkit show *.CR3 -e shoot-day1.md # batch report into one custom .md file
 
 # Set GPS location — paste coordinates straight from a maps app
 exifkit gps photo.jpg --coords "-23.5505, -46.6333"
