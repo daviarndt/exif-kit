@@ -4,6 +4,8 @@
 [![CI](https://github.com/daviarndt/exifregistry/actions/workflows/ci.yml/badge.svg)](https://github.com/daviarndt/exifregistry/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/exifregistry)](LICENSE)
 
+**Website: [exifregistry.com](https://exifregistry.com)** · Support the project: [Buy me a coffee](https://buymeacoffee.com/daviarndtx) ☕
+
 A friendly command-line toolkit for photographers and filmmakers to **inspect and edit photo/video metadata** — EXIF, GPS location, capture dates and more.
 
 Works with JPEG, PNG, TIFF, HEIC, all major RAW formats (CR2/CR3, NEF, ARW, DNG, RAF, ORF...) and video containers (MP4, MOV, AVI...), powered by the battle-tested [ExifTool](https://exiftool.org) — which comes **bundled**, so there is nothing else to install.

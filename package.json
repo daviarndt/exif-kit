@@ -10,7 +10,7 @@
     "exiftool",
     "cli"
   ],
-  "homepage": "https://github.com/daviarndt/exifregistry#readme",
+  "homepage": "https://exifregistry.com",
   "bugs": "https://github.com/daviarndt/exifregistry/issues",
   "repository": {
     "type": "git",
