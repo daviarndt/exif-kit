@@ -9,7 +9,7 @@ A friendly command-line toolkit for photographers and filmmakers to **inspect an
 Works with JPEG, PNG, TIFF, HEIC, all major RAW formats (CR2/CR3, NEF, ARW, DNG, RAF, ORF...) and video containers (MP4, MOV, AVI...), powered by the battle-tested [ExifTool](https://exiftool.org) — which comes **bundled**, so there is nothing else to install.
 
 ```
-$ exifregistry show IMG_4021.CR3
+$ exifreg show IMG_4021.CR3
 ┌────────────────────────────┬─────────────────────────┐
 │ File                       │ IMG_4021.CR3            │
 │ Camera                     │ Canon EOS R6            │
@@ -30,14 +30,14 @@ $ exifregistry show IMG_4021.CR3
 - 🕑 **Date editing** — fix capture dates, modification dates, or **shift all dates** to fix a wrong camera clock/timezone
 - 📋 **Copy metadata** between files (e.g. restore metadata after an export stripped it)
 - 🧹 **Strip everything** for privacy-safe sharing
-- ↩️ **Undo** — every edit keeps a backup by default; `exifregistry undo` restores it
+- ↩️ **Undo** — every edit keeps a backup by default; `exifreg undo` restores it
 - 🗂 **Organize** — move/copy photos into folders derived from metadata: `{year}/{date}`, `{camera}/{date}`, even `{country}/{city}` (offline geolocation, no internet needed)
 - ✏️ **Rename by pattern** — `{date}_{time}_{name}`, `{date}_{counter:3}` in shooting order
 - 💾 **Ingest** — import memory cards into organized folders with SHA-256 copy verification
 - 🔍 **Dupes** — find byte-identical duplicates before they clutter your library
 - 🖼 **Frame** — re-render photos inside an aesthetic colored frame with their EXIF caption in Space Mono, ready for portfolios and social media (multiple aspect ratios, 21 named colors)
 - 📐 **Resize & convert** — hit an exact file size ("make this 1MB") with the best quality that fits, resize by long edge/percent, convert JPEG/WebP/AVIF/PNG — originals never touched, EXIF preserved
-- 🧭 **Interactive mode** — just run `exifregistry` and follow the menus; zero flags to memorize
+- 🧭 **Interactive mode** — just run `exifreg` and follow the menus; zero flags to memorize
 - 📦 **Self-contained** — ExifTool is bundled; `npm install` and you're done
 
 All file operations are **dry-run by default** (they print the plan; `--apply` executes), RAW+JPEG pairs and `.xmp`/`.aae` sidecars always travel together, nothing is ever overwritten, and every executed batch can be reverted with `--undo`.
@@ -50,6 +50,8 @@ Requires [Node.js](https://nodejs.org) 20.18 or newer.
 npm install -g exifregistry
 ```
 
+This installs the **`exifreg`** command (`exifregistry` also works as a long alias).
+
 Or straight from GitHub:
 
 ```bash
@@ -59,7 +61,7 @@ npm install -g github:daviarndt/exifregistry
 Verify everything is ready:
 
 ```bash
-exifregistry doctor
+exifreg doctor
 ```
 
 ## Usage
@@ -69,45 +71,45 @@ exifregistry doctor
 Just run it bare and follow the menus:
 
 ```bash
-exifregistry
+exifreg
 ```
 
 ### Direct commands
 
 ```bash
 # Inspect metadata (key fields: camera, shutter count, exposure, dates, GPS)
-exifregistry show photo.jpg
-exifregistry show photo.jpg -v           # verbose: also list ALL remaining tags
-exifregistry show *.CR3                  # globs work
-exifregistry show ~/Photos/trip -r       # whole folders, recursively
-exifregistry show photo.jpg --all        # flat alphabetical dump instead
-exifregistry show photo.jpg --json       # machine-readable
-exifregistry show photo.jpg --export     # also save the report as photo.metadata.md
-exifregistry show *.CR3 -e shoot-day1.md # batch report into one custom .md file
+exifreg show photo.jpg
+exifreg show photo.jpg -v           # verbose: also list ALL remaining tags
+exifreg show *.CR3                  # globs work
+exifreg show ~/Photos/trip -r       # whole folders, recursively
+exifreg show photo.jpg --all        # flat alphabetical dump instead
+exifreg show photo.jpg --json       # machine-readable
+exifreg show photo.jpg --export     # also save the report as photo.metadata.md
+exifreg show *.CR3 -e shoot-day1.md # batch report into one custom .md file
 
 # Set GPS location — paste coordinates straight from a maps app
-exifregistry gps photo.jpg --coords "-23.5505, -46.6333"
-exifregistry gps *.jpg --lat -23.5505 --lon -46.6333 --alt 760
-exifregistry gps clip.mp4 --coords "48.8566, 2.3522"   # videos too
-exifregistry gps photo.jpg --remove       # delete GPS data
+exifreg gps photo.jpg --coords "-23.5505, -46.6333"
+exifreg gps *.jpg --lat -23.5505 --lon -46.6333 --alt 760
+exifreg gps clip.mp4 --coords "48.8566, 2.3522"   # videos too
+exifreg gps photo.jpg --remove       # delete GPS data
 
 # Edit dates
-exifregistry date photo.jpg --taken "2024-06-01 14:30"    # capture date
-exifregistry date photo.jpg --modified "2024-06-02 10:00" # edit date
-exifregistry date *.NEF --all "2024-06-01 14:30"          # all dates at once
-exifregistry date *.jpg --shift "+2h"                     # camera clock was 2h behind
-exifregistry date *.jpg --shift "-1d 30m"                 # shift back 1 day 30 min
-exifregistry date photo.jpg --taken "2024-06-01" --sync-file  # also sync file mtime
+exifreg date photo.jpg --taken "2024-06-01 14:30"    # capture date
+exifreg date photo.jpg --modified "2024-06-02 10:00" # edit date
+exifreg date *.NEF --all "2024-06-01 14:30"          # all dates at once
+exifreg date *.jpg --shift "+2h"                     # camera clock was 2h behind
+exifreg date *.jpg --shift "-1d 30m"                 # shift back 1 day 30 min
+exifreg date photo.jpg --taken "2024-06-01" --sync-file  # also sync file mtime
 
 # Copy all metadata from one file to another
-exifregistry copy original.CR3 exported.jpg
+exifreg copy original.CR3 exported.jpg
 
 # Strip ALL metadata (privacy)
-exifregistry strip photo.jpg
+exifreg strip photo.jpg
 
 # Made a mistake? Restore the automatic backup
-exifregistry undo photo.jpg
-exifregistry undo ~/Photos/trip           # restore every backup in a folder
+exifreg undo photo.jpg
+exifreg undo ~/Photos/trip           # restore every backup in a folder
 ```
 
 ### Organizing files
@@ -116,26 +118,26 @@ Every command below previews its plan first — add `--apply` to execute.
 
 ```bash
 # Move photos into folders derived from metadata
-exifregistry organize ~/Downloads/card --to ~/Photos --by "{year}/{date}"
-exifregistry organize . --by "{camera}/{date}"        # multi-camera shoots
-exifregistry organize . --by "{country}/{city}"       # GPS → city, fully offline
-exifregistry organize . --by "{year}/{month}" --copy  # copy instead of move
-exifregistry organize --undo --to ~/Photos            # revert the last batch
+exifreg organize ~/Downloads/card --to ~/Photos --by "{year}/{date}"
+exifreg organize . --by "{camera}/{date}"        # multi-camera shoots
+exifreg organize . --by "{country}/{city}"       # GPS → city, fully offline
+exifreg organize . --by "{year}/{month}" --copy  # copy instead of move
+exifreg organize --undo --to ~/Photos            # revert the last batch
 
 # Rename in place (RAW+JPEG pairs and sidecars keep matching names)
-exifregistry rename *.CR3 -p "{date}_{time}_{name}"
-exifregistry rename . -p "wedding_{counter:3}"        # wedding_001.CR3, _002... in shooting order
-exifregistry rename --undo .
+exifreg rename *.CR3 -p "{date}_{time}_{name}"
+exifreg rename . -p "wedding_{counter:3}"        # wedding_001.CR3, _002... in shooting order
+exifreg rename --undo .
 
 # Import a memory card: copies (never deletes from the card), verified
-exifregistry ingest /Volumes/EOS_R6 --to ~/Photos --by "{year}/{date}" --verify --apply
+exifreg ingest /Volumes/EOS_R6 --to ~/Photos --by "{year}/{date}" --verify --apply
 
 # Sort a messy folder into Photos/, RAW/ and Videos/
-exifregistry split ~/Downloads/mixed --apply
+exifreg split ~/Downloads/mixed --apply
 
 # Find byte-identical duplicates
-exifregistry dupes ~/Photos -r
-exifregistry dupes ~/Photos -r --delete --apply       # keeps the first of each group
+exifreg dupes ~/Photos -r
+exifreg dupes ~/Photos -r --delete --apply       # keeps the first of each group
 ```
 
 ### Framing photos
@@ -143,12 +145,12 @@ exifregistry dupes ~/Photos -r --delete --apply       # keeps the first of each 
 Render photos inside a colored frame with their EXIF written underneath (or on top) in Space Mono — the classic "shot on" portfolio look:
 
 ```bash
-exifregistry frame photo.jpg                            # white frame, EXIF below
-exifregistry frame *.CR3 -c off-white --ratio 4:5       # RAW works (embedded preview)
-exifregistry frame photo.jpg -c charcoal --ratio 1:1 --caption top
-exifregistry frame photo.jpg -c "#1E2A44" --ratio 9:16  # any hex works too
-exifregistry frame trip/ -c cream -o framed/            # whole folders, custom output dir
-exifregistry frame --colors                             # see all 21 colors + hex codes
+exifreg frame photo.jpg                            # white frame, EXIF below
+exifreg frame *.CR3 -c off-white --ratio 4:5       # RAW works (embedded preview)
+exifreg frame photo.jpg -c charcoal --ratio 1:1 --caption top
+exifreg frame photo.jpg -c "#1E2A44" --ratio 9:16  # any hex works too
+exifreg frame trip/ -c cream -o framed/            # whole folders, custom output dir
+exifreg frame --colors                             # see all 21 colors + hex codes
 ```
 
 The caption reads like `35mm · f/2.8 · 1/250s · ISO 400`, sized and centered automatically, with text color adapted to the frame; add `--camera` to include the camera model above it. Output is high-resolution JPEG (long edge 3000px by default; `--size full` keeps the photo at its **native resolution**, `--quality` up to 100), named `photo.framed.jpg`, and **keeps the original photo's EXIF**. Ratios: `1:1`, `4:5`, `9:16`, `3:2`, `16:9`, any `W:H`, or `original`. Margin is tunable with `--margin <pct>`.
@@ -160,13 +162,13 @@ Colors include everyday tones (white, off-white, cream, black, charcoal, gray...
 Every resize writes a **new** file (`photo.resized.jpg`) — the original is never modified — and the output keeps the original's EXIF:
 
 ```bash
-exifregistry resize photo.jpg --max-size 1mb     # best quality that fits in 1 MB
-exifregistry resize *.jpg -s 500kb -o web/       # batch, into a folder
-exifregistry resize photo.jpg --long 2048        # long edge to 2048px
-exifregistry resize photo.jpg --percent 50       # half size
-exifregistry resize photo.jpg -f webp            # convert format (jpeg/webp/avif/png/tiff)
-exifregistry resize photo.heic -f jpeg           # HEIC → JPEG (macOS)
-exifregistry resize photo.jpg --long 1600 -f webp --suffix web   # photo.web.webp
+exifreg resize photo.jpg --max-size 1mb     # best quality that fits in 1 MB
+exifreg resize *.jpg -s 500kb -o web/       # batch, into a folder
+exifreg resize photo.jpg --long 2048        # long edge to 2048px
+exifreg resize photo.jpg --percent 50       # half size
+exifreg resize photo.jpg -f webp            # convert format (jpeg/webp/avif/png/tiff)
+exifreg resize photo.heic -f jpeg           # HEIC → JPEG (macOS)
+exifreg resize photo.jpg --long 1600 -f webp --suffix web   # photo.web.webp
 ```
 
 `--max-size` runs a binary search over encoding quality (mozjpeg) to find the **highest quality that fits** your target — no guessing quality numbers. If even minimum quality can't reach it, dimensions are gently reduced until it does. The success line tells you exactly what happened: `photo.jpg (12.3 MB) → photo.resized.jpg (0.98 MB, 6000x4000, q74)`.
@@ -175,7 +177,7 @@ exifregistry resize photo.jpg --long 1600 -f webp --suffix web   # photo.web.web
 
 ### Backups
 
-Every write keeps the untouched original next to the edited file with an `_original` suffix (e.g. `photo.jpg_original`). Restore it any time with `exifregistry undo`, or skip backups entirely with `--no-backup`.
+Every write keeps the untouched original next to the edited file with an `_original` suffix (e.g. `photo.jpg_original`). Restore it any time with `exifreg undo`, or skip backups entirely with `--no-backup`.
 
 ## Supported formats
 

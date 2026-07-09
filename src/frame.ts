@@ -64,7 +64,7 @@ export function resolveColor(input: string): FrameColor {
     `Unknown color "${input}". Pick one of: ` +
       FRAME_COLORS.map((c) => c.name).join(", ") +
       " — or pass a hex value like \"#AABBCC\". " +
-      "(See them all with: exifregistry frame --colors)",
+      "(See them all with: exifreg frame --colors)",
   );
 }
 

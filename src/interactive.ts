@@ -281,7 +281,7 @@ async function actionOrganize(): Promise<void> {
   journalBatch(destRoot, "organize", done, copy);
   printSuccess(
     `${done.length} file(s) ${copy ? "copied" : "moved"}. ` +
-      "Undo with: exifregistry organize --undo" +
+      "Undo with: exifreg organize --undo" +
       (destRoot === "." ? "" : ` --to ${destRoot}`),
   );
 }
