@@ -12,7 +12,9 @@ import pc from "picocolors";
 
 import * as engine from "./engine.js";
 import * as fields from "./fields.js";
-import { prepareGroups, writeMarkdownReport } from "./cli.js";
+import { frameFiles, prepareGroups, writeMarkdownReport } from "./cli.js";
+import { FRAME_COLORS, parseRatio, resolveColor } from "./frame.js";
+import { isVideo } from "./fields.js";
 import {
   describeFiles,
   printError,
@@ -313,6 +315,50 @@ async function actionRename(): Promise<void> {
   printSuccess(`${done.length} file(s) renamed.`);
 }
 
+async function actionFrame(): Promise<void> {
+  const all = await askFiles("Frame which photo(s)? (path, folder, or glob)");
+  if (!all) return;
+  const paths = all.filter((p) => !isVideo(p));
+  if (paths.length === 0) {
+    printError("No photos to frame (videos are not supported).");
+    return;
+  }
+  const colorName = await select({
+    message: "Frame color?",
+    choices: FRAME_COLORS.map((c) => ({
+      name: `${c.name.padEnd(12)} ${c.hex}`,
+      value: c.name,
+    })),
+    pageSize: 12,
+  });
+  const ratioText = await select({
+    message: "Aspect ratio?",
+    choices: [
+      { name: "Original (follow the photo)", value: "original" },
+      { name: "1:1  (square)", value: "1:1" },
+      { name: "4:5  (portrait feed)", value: "4:5" },
+      { name: "9:16 (stories/reels)", value: "9:16" },
+      { name: "3:2  (classic print)", value: "3:2" },
+      { name: "16:9 (widescreen)", value: "16:9" },
+    ],
+  });
+  const caption = await select({
+    message: "EXIF caption?",
+    choices: [
+      { name: "Below the photo", value: "bottom" as const },
+      { name: "Above the photo", value: "top" as const },
+      { name: "No caption", value: "none" as const },
+    ],
+  });
+  await frameFiles(paths, {
+    color: resolveColor(colorName),
+    ratio: parseRatio(ratioText),
+    caption,
+    marginPct: 6,
+    size: 3000,
+  });
+}
+
 async function actionUndo(): Promise<void> {
   const answer = (
     await input({
@@ -350,6 +396,7 @@ export async function runInteractive(): Promise<void> {
     strip: actionStrip,
     organize: actionOrganize,
     rename: actionRename,
+    frame: actionFrame,
     undo: actionUndo,
   };
 
@@ -367,6 +414,7 @@ export async function runInteractive(): Promise<void> {
           { name: "🧹  Strip all metadata (privacy)", value: "strip" },
           { name: "🗂   Organize into folders", value: "organize" },
           { name: "✏️   Rename by pattern", value: "rename" },
+          { name: "🖼   Frame photos (EXIF caption)", value: "frame" },
           { name: "↩️   Undo metadata edit (restore backup)", value: "undo" },
           { name: "👋  Quit", value: "quit" },
         ],

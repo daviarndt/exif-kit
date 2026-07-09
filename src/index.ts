@@ -16,4 +16,12 @@ export {
   sha256,
   undoLastBatch,
 } from "./organizer.js";
+export {
+  FRAME_COLORS,
+  buildCaption,
+  computeLayout,
+  parseRatio,
+  renderFrame,
+  resolveColor,
+} from "./frame.js";
 export { needsGeolocation, resolvePattern, sanitizeComponent } from "./pattern.js";

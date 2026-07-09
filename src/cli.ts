@@ -24,6 +24,16 @@ import {
   printSuccess,
 } from "./display.js";
 import { findDupes } from "./dupes.js";
+import {
+  FRAME_COLORS,
+  parseRatio,
+  prepareSource,
+  renderFrame,
+  resolveColor,
+  type CaptionPosition,
+  type FrameColor,
+  type Ratio,
+} from "./frame.js";
 import { defaultExportPath, metadataToMarkdown } from "./markdown.js";
 import {
   executePlan,
@@ -72,6 +82,64 @@ function resolveFiles(inputs: string[], recursive = false): string[] {
   }
   if (paths.length === 0) fail("No supported photo or video files found.");
   return paths;
+}
+
+export interface FrameRunOptions {
+  color: FrameColor;
+  ratio: Ratio | null;
+  caption: CaptionPosition;
+  marginPct: number;
+  size: number;
+  outDir?: string;
+}
+
+function parseCaptionPosition(input: string): CaptionPosition {
+  const cleaned = input.trim().toLowerCase();
+  if (cleaned === "bottom" || cleaned === "top" || cleaned === "none") {
+    return cleaned;
+  }
+  throw new Error(`Caption position must be "bottom", "top" or "none" (got "${input}").`);
+}
+
+function reserveFrameOutput(source: string, outDir?: string): string {
+  const dir = outDir ?? path.dirname(source);
+  fs.mkdirSync(dir, { recursive: true });
+  const stem = path.basename(source, path.extname(source));
+  let candidate = path.join(dir, `${stem}.framed.jpg`);
+  for (let i = 1; fs.existsSync(candidate); i++) {
+    candidate = path.join(dir, `${stem}.framed_${i}.jpg`);
+  }
+  return candidate;
+}
+
+/** Render frames for a batch of photos (shared by CLI and interactive mode). */
+export async function frameFiles(
+  paths: string[],
+  options: FrameRunOptions,
+): Promise<void> {
+  const metadata = await engine.read(paths);
+  for (let i = 0; i < paths.length; i++) {
+    const source = paths[i];
+    const prepared = await prepareSource(source);
+    try {
+      const out = reserveFrameOutput(source, options.outDir);
+      await renderFrame(prepared.path, metadata[i], out, options);
+      try {
+        // The render carries the original photo's EXIF; pixels are already
+        // upright, so the copied Orientation tag is reset.
+        await engine.applyEdit(
+          [out],
+          { tags: {}, extraArgs: ["-TagsFromFile", source, "-all:all", "-Orientation#=1"] },
+          { backup: false },
+        );
+      } catch {
+        /* metadata copy is best-effort; the render itself succeeded */
+      }
+      printSuccess(`Framed ${path.basename(source)} → ${out}`);
+    } finally {
+      prepared.cleanup();
+    }
+  }
 }
 
 /** Group files with their companions and read pattern metadata for primaries. */
@@ -516,6 +584,51 @@ export function buildProgram(): Command {
       if (!confirmed) return;
       for (const file of doomed) fs.rmSync(file);
       printSuccess(`Deleted ${doomed.length} duplicate file(s).`);
+    });
+
+  program
+    .command("frame")
+    .description("Re-render photos inside an aesthetic colored frame with an EXIF caption.")
+    .argument("[files...]", "photos (RAW works too — the embedded preview is used)")
+    .option("-c, --color <color>", 'frame color by name (or "#RRGGBB")', "white")
+    .option("--ratio <ratio>", '"1:1", "4:5", "9:16", "3:2"... or "original"', "original")
+    .option("--caption <position>", "EXIF caption: bottom, top or none", "bottom")
+    .option("--margin <percent>", "margin around the photo (% of frame)", "6")
+    .option("--size <pixels>", "long edge of the final render", "3000")
+    .option("-o, --out <dir>", "output folder (default: next to each photo)")
+    .option("--colors", "list all frame colors with their hex codes")
+    .action(async (files: string[], opts) => {
+      if (opts.colors) {
+        for (const c of FRAME_COLORS) {
+          const [r, g, b] = [1, 3, 5].map((i) => parseInt(c.hex.slice(i, i + 2), 16));
+          console.log(
+            `\u001b[48;2;${r};${g};${b}m      \u001b[0m  ${c.name.padEnd(12)} ${c.hex}`,
+          );
+        }
+        return;
+      }
+      if (files.length === 0) {
+        fail('Tell me what to frame, e.g.: exifkit frame photo.jpg -c off-white --ratio 4:5');
+      }
+      let options: FrameRunOptions;
+      try {
+        options = {
+          color: resolveColor(opts.color),
+          ratio: parseRatio(opts.ratio),
+          caption: parseCaptionPosition(opts.caption),
+          marginPct: Number(opts.margin),
+          size: Number(opts.size),
+          outDir: opts.out,
+        };
+      } catch (err) {
+        fail((err as Error).message);
+      }
+      if (!Number.isFinite(options.marginPct) || !Number.isFinite(options.size)) {
+        fail("--margin and --size must be numbers.");
+      }
+      const paths = resolveFiles(files).filter((p) => !fields.isVideo(p));
+      if (paths.length === 0) fail("No photos to frame (videos are not supported).");
+      await frameFiles(paths, options);
     });
 
   program

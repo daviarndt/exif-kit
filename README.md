@@ -35,6 +35,7 @@ $ exifkit show IMG_4021.CR3
 - ✏️ **Rename by pattern** — `{date}_{time}_{name}`, `{date}_{counter:3}` in shooting order
 - 💾 **Ingest** — import memory cards into organized folders with SHA-256 copy verification
 - 🔍 **Dupes** — find byte-identical duplicates before they clutter your library
+- 🖼 **Frame** — re-render photos inside an aesthetic colored frame with their EXIF caption in Space Mono, ready for portfolios and social media (multiple aspect ratios, 21 named colors)
 - 🧭 **Interactive mode** — just run `exifkit` and follow the menus; zero flags to memorize
 - 📦 **Self-contained** — ExifTool is bundled; `npm install` and you're done
 
@@ -135,6 +136,23 @@ exifkit split ~/Downloads/mixed --apply
 exifkit dupes ~/Photos -r
 exifkit dupes ~/Photos -r --delete --apply       # keeps the first of each group
 ```
+
+### Framing photos
+
+Render photos inside a colored frame with their EXIF written underneath (or on top) in Space Mono — the classic "shot on" portfolio look:
+
+```bash
+exifkit frame photo.jpg                            # white frame, EXIF below
+exifkit frame *.CR3 -c off-white --ratio 4:5       # RAW works (embedded preview)
+exifkit frame photo.jpg -c charcoal --ratio 1:1 --caption top
+exifkit frame photo.jpg -c "#1E2A44" --ratio 9:16  # any hex works too
+exifkit frame trip/ -c cream -o framed/            # whole folders, custom output dir
+exifkit frame --colors                             # see all 21 colors + hex codes
+```
+
+The caption reads like `CANON EOS R6` / `35mm · f/2.8 · 1/250s · ISO 400`, sized and centered automatically, with text color adapted to the frame. Output is high-resolution JPEG (long edge 3000px by default, `--size` to change; quality 95, 4:4:4), named `photo.framed.jpg`, and **keeps the original photo's EXIF**. Ratios: `1:1`, `4:5`, `9:16`, `3:2`, `16:9`, any `W:H`, or `original`. Margin is tunable with `--margin <pct>`.
+
+Colors include everyday tones (white, off-white, cream, black, charcoal, gray...) and bolder ones (terracotta, sage, navy, burgundy, mustard, dusty-pink...). Space Mono is bundled under the [SIL Open Font License](assets/fonts/OFL.txt).
 
 **Pattern placeholders:** `{year}` `{month}` `{day}` `{date}` `{hour}` `{minute}` `{second}` `{time}` `{camera}` `{lens}` `{type}` `{name}` `{ext}` `{city}` `{region}` `{country}` `{counter}` (pad with `{counter:4}`). Dates come from `DateTimeOriginal` (real capture time), falling back to file dates only when the metadata is missing.
 

@@ -96,6 +96,23 @@ export async function stripMetadata(
   await applyEdit(paths, { tags: {}, extraArgs: ["-all="] }, options);
 }
 
+/**
+ * Extract the embedded JPEG preview from a RAW file (cameras embed one,
+ * usually full-resolution). Returns the path it was written to.
+ */
+export async function extractRawPreview(
+  file: string,
+  destination: string,
+): Promise<string> {
+  try {
+    await exiftool.extractJpgFromRaw(file, destination);
+    return destination;
+  } catch {
+    await exiftool.extractPreview(file, destination);
+    return destination;
+  }
+}
+
 /** The version of the bundled ExifTool binary. */
 export async function exiftoolVersion(): Promise<string> {
   return exiftool.version();
