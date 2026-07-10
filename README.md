@@ -150,6 +150,8 @@ Render photos inside a colored frame with their EXIF written underneath (or on t
 exifreg frame photo.jpg                            # white frame, EXIF below
 exifreg frame *.CR3 -c off-white --ratio 4:5       # RAW works (embedded preview)
 exifreg frame photo.jpg -c charcoal --ratio 1:1 --caption top
+exifreg frame photo.jpg -c sage --caption none     # no text at all, just the frame
+exifreg frame photo.jpg --camera                   # add the camera model to the caption
 exifreg frame photo.jpg -c "#1E2A44" --ratio 9:16  # any hex works too
 exifreg frame trip/ -c cream -o framed/            # whole folders, custom output dir
 exifreg frame --colors                             # see all 21 colors + hex codes
