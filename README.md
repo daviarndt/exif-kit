@@ -31,6 +31,7 @@ $ exifreg show DSC02481.ARW
 - 📍 **GPS editing**: set location by pasting coordinates straight from Google/Apple Maps; remove GPS for privacy
 - 🕑 **Date editing**: fix capture dates, modification dates, or **shift all dates** to fix a wrong camera clock/timezone
 - 📋 **Copy metadata** between files (e.g. restore metadata after an export stripped it)
+- 🗓 **Copy dates** between files, choosing which dates (capture, modified, or all)
 - 🧹 **Strip everything** for privacy-safe sharing
 - ↩️ **Undo**: every edit keeps a backup by default; `exifreg undo` restores it
 - 🗂 **Organize**: move/copy photos into folders derived from metadata: `{year}/{date}`, `{camera}/{date}`, even `{country}/{city}` (offline geolocation, no internet needed)
@@ -132,6 +133,10 @@ exifreg date photo.jpg --taken "2024-06-01" --sync-file  # also sync file mtime
 # Copy all metadata from one file to another
 exifreg copy original.ARW exported.jpg
 
+# Copy only the dates (pick which)
+exifreg copydates original.ARW scan.jpg --taken   # just the capture date
+exifreg copydates original.ARW scan.jpg           # all dates (default)
+
 # Strip ALL metadata (privacy)
 exifreg strip photo.jpg
 
@@ -225,6 +230,12 @@ See what you have done lately:
 ```bash
 exifreg history            # recent operations, newest first
 exifreg history -n 50      # more of them
+```
+
+Check for a newer version (the only command that touches the network, and only when you run it):
+
+```bash
+exifreg update
 ```
 
 ### Backing up

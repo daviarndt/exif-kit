@@ -523,6 +523,39 @@ backups by default. Full docs: https://github.com/daviarndt/exifregistry`,
     });
 
   program
+    .command("copydates")
+    .description("Copy only the dates from one file onto others (choose which dates).")
+    .argument("<source>", "file to copy dates from")
+    .argument("<targets...>", "files to copy dates onto")
+    .option("-t, --taken", "copy the capture date (DateTimeOriginal + CreateDate)")
+    .option("-m, --modified", "copy the modification date (ModifyDate)")
+    .option("--all", "copy all dates (taken, created and modified) [default]")
+    .option("--no-backup", "do not keep '_original' backup copies")
+    .action(async (source: string, targets: string[], opts) => {
+      const [sourcePath] = resolveFiles([source]);
+      const targetPaths = resolveFiles(targets);
+
+      const tags: string[] = [];
+      if (opts.taken) tags.push("-DateTimeOriginal", "-CreateDate");
+      if (opts.modified) tags.push("-ModifyDate");
+      // Default (or explicit --all): copy all three date tags.
+      if (opts.all || (!opts.taken && !opts.modified)) {
+        tags.length = 0;
+        tags.push("-AllDates");
+      }
+
+      await engine.applyEdit(
+        targetPaths,
+        { tags: {}, extraArgs: ["-TagsFromFile", sourcePath, ...tags] },
+        { backup: opts.backup },
+      );
+      recordHistory("copydates", `copied dates to ${describeFiles(targetPaths)}`, targetPaths.length);
+      printSuccess(
+        `Copied dates from ${describeFiles([sourcePath])} to ${describeFiles(targetPaths)}.`,
+      );
+    });
+
+  program
     .command("strip")
     .description("Remove ALL metadata (camera, dates, GPS) — for privacy-safe sharing.")
     .argument("<files...>", "files, folders or glob patterns")
@@ -1448,6 +1481,27 @@ backups by default. Full docs: https://github.com/daviarndt/exifregistry`,
         .map((c) => c.name())
         .filter((n) => n !== "completion");
       console.log(completionScript(parsed, names));
+    });
+
+  program
+    .command("update")
+    .description("Check npm for a newer version (the only command that uses the network).")
+    .action(async () => {
+      const { fetchLatestVersion, compareVersions } = await import("./update.js");
+      console.log(`You have exifregistry ${VERSION}. Checking for updates...`);
+      const latest = await fetchLatestVersion();
+      if (!latest) {
+        fail("Could not reach npm to check for updates. Try again later.");
+      }
+      const cmp = compareVersions(VERSION, latest);
+      if (cmp >= 0) {
+        printSuccess("You are on the latest version.");
+        return;
+      }
+      console.log(`A newer version is available: ${latest}`);
+      console.log("Update with whichever way you installed it:");
+      console.log("  npm:      npm install -g exifregistry@latest");
+      console.log("  Homebrew: brew upgrade exifregistry");
     });
 
   program

@@ -230,6 +230,48 @@ async function actionCopy(): Promise<void> {
   );
 }
 
+async function actionCopyDates(): Promise<void> {
+  const source = (await input({ message: "Copy dates FROM which file?" })).trim();
+  if (!source) return;
+  let sourcePath: string;
+  try {
+    const resolved = expandPaths([source]);
+    if (resolved.length !== 1) {
+      printError("Pick exactly one source file.");
+      return;
+    }
+    sourcePath = resolved[0];
+  } catch (err) {
+    printError((err as Error).message);
+    return;
+  }
+  const which = await select({
+    message: "Which dates?",
+    choices: [
+      { name: "All dates (taken, created, modified)", value: "all" },
+      { name: "Capture date only (when it was taken)", value: "taken" },
+      { name: "Modification date only", value: "modified" },
+    ],
+  });
+  const targets = await askFiles("Copy dates TO which file(s)?");
+  if (!targets) return;
+  const tags =
+    which === "taken"
+      ? ["-DateTimeOriginal", "-CreateDate"]
+      : which === "modified"
+        ? ["-ModifyDate"]
+        : ["-AllDates"];
+  const backup = await askBackup();
+  await engine.applyEdit(
+    targets,
+    { tags: {}, extraArgs: ["-TagsFromFile", sourcePath, ...tags] },
+    { backup },
+  );
+  printSuccess(
+    `Copied dates from ${describeFiles([sourcePath])} to ${describeFiles(targets)}.`,
+  );
+}
+
 async function actionStrip(): Promise<void> {
   const paths = await askFiles();
   if (!paths) return;
@@ -570,6 +612,7 @@ export async function runInteractive(): Promise<void> {
     gpsRemove: actionGpsRemove,
     dates: actionDates,
     copy: actionCopy,
+    copydates: actionCopyDates,
     strip: actionStrip,
     organize: actionOrganize,
     rename: actionRename,
@@ -590,6 +633,7 @@ export async function runInteractive(): Promise<void> {
           { name: "🚫  Remove GPS location", value: "gpsRemove" },
           { name: "🕑  Edit dates", value: "dates" },
           { name: "📋  Copy metadata between files", value: "copy" },
+          { name: "🗓   Copy dates between files", value: "copydates" },
           { name: "🧹  Strip all metadata (privacy)", value: "strip" },
           { name: "🗂   Organize into folders", value: "organize" },
           { name: "✏️   Rename by pattern", value: "rename" },

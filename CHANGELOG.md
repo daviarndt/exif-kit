@@ -3,6 +3,13 @@
 All notable changes to exifregistry are documented here. This project follows
 [Semantic Versioning](https://semver.org).
 
+## [1.6.0]
+
+### Added
+
+- `copydates` command: copy only the dates from one file onto others, choosing which (`--taken`, `--modified`, or all). Also in interactive mode.
+- `update` command: opt-in check for a newer version on npm (the only command that uses the network).
+
 ## [1.5.0]
 
 ### Added
