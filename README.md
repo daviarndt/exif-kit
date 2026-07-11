@@ -43,7 +43,7 @@ $ exifreg show DSC02481.ARW
 - 🌍 **Timezone**: write the UTC offset cameras forget, even deriving it from each photo's own GPS (offline)
 - ✍️ **Sign**: stamp your authorship (Artist + Copyright) in bulk, with a saved preset
 - 🪞 **Diff**: compare two files' metadata side by side
-- 🖼 **Contact sheets**: a client-ready thumbnail grid with EXIF labels, one JPEG
+- 🖼 **Contact sheets**: a client-ready thumbnail grid as JPEG or high-resolution PDF, in any color, with or without EXIF labels
 - 🖼 **Frame**: re-render photos inside an aesthetic colored frame with their EXIF caption in Space Mono, ready for portfolios and social media (multiple aspect ratios, 21 named colors)
 - 📐 **Resize & convert**: hit an exact file size ("make this 1MB") with the best quality that fits, resize by long edge/percent, convert JPEG/WebP/AVIF/PNG. Originals never touched, EXIF preserved
 - ⚙️ **Config**: save defaults once (your name for `sign`, a backup drive, a favorite frame color) and stop repeating flags
@@ -195,10 +195,17 @@ exifreg timezone trip/ --from-gps            # derive each photo's offset from i
 
 ### Contact sheets
 
+The sheet is written next to the photos (not the terminal's folder), as JPEG or PDF:
+
 ```bash
-exifreg contact wedding/ -c 5                # 5 columns, wedding-contact.jpg
-exifreg contact selects/ --out client.jpg    # RAW files use their embedded previews
+exifreg contact wedding/ -c 5                     # 5 columns, wedding/wedding-contact.jpg
+exifreg contact wedding/ -f pdf                   # high-resolution PDF instead
+exifreg contact wedding/ --color charcoal         # any of the 21 frame colors
+exifreg contact wedding/ --no-exif                # filename labels only, no exposure line
+exifreg contact selects/ --out ~/Desktop/client.pdf   # explicit path (format from extension)
 ```
+
+RAW files use their embedded previews. The PDF embeds the sheet losslessly at full resolution.
 
 ### Defaults and history
 

@@ -25,6 +25,7 @@ export {
 export { completionScript, parseShell } from "./completion.js";
 export { historyPath, readHistory, recordHistory } from "./history.js";
 export { renderContactSheet } from "./contact.js";
+export { jpegToPdf } from "./pdf.js";
 export { findDupes } from "./dupes.js";
 export { matches, parseCondition } from "./query.js";
 export { computeStats, statsToMarkdown } from "./stats.js";

@@ -18,25 +18,39 @@ export interface ContactOptions {
   /** Width of each cell's image box in pixels. */
   cellWidth: number;
   title: string;
+  /** Sheet background color as #RRGGBB (default off-white). */
+  background?: string;
+  /** Include the EXIF exposure line under each thumbnail (default true). */
+  exif?: boolean;
   onProgress?: (current: number, total: number, file: string) => void;
 }
 
-const BG = "#FAF4EC";
-const INK = "#2E2E2E";
-const INK_SOFT = "#8A8073";
+const DEFAULT_BG = "#FAF4EC";
 const MARGIN = 48;
 const GAP = 18;
+
+/** Pick readable ink colors for a given background lightness. */
+function inkFor(hex: string): { ink: string; soft: string; tile: string } {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luma > 0.45
+    ? { ink: "#2E2E2E", soft: "#8A8073", tile: "#E7DDCD" }
+    : { ink: "#F3EADC", soft: "#B9AE9E", tile: "#3A302A" };
+}
 
 export async function renderContactSheet(
   files: string[],
   metadata: Metadata[],
-  out: string,
+  out: string | null,
   options: ContactOptions,
-): Promise<{ width: number; height: number; cells: number }> {
+): Promise<{ buffer: Buffer; width: number; height: number; cells: number }> {
+  const BG = options.background ?? DEFAULT_BG;
+  const { ink: INK, soft: INK_SOFT, tile: TILE } = inkFor(BG);
+  const withExif = options.exif !== false;
   const cols = Math.max(1, Math.min(options.columns, files.length));
   const cellW = options.cellWidth;
   const imageH = Math.round((cellW * 3) / 4);
-  const labelH = 46;
+  const labelH = withExif ? 46 : 28;
   const cellH = imageH + labelH;
   const rows = Math.ceil(files.length / cols);
 
@@ -67,7 +81,7 @@ export async function renderContactSheet(
     try {
       const thumb = await sharp(prepared.path, { limitInputPixels: 1e9 })
         .rotate()
-        .resize(cellW, imageH, { fit: "contain", background: "#E7DDCD" })
+        .resize(cellW, imageH, { fit: "contain", background: TILE })
         .jpeg({ quality: 88 })
         .toBuffer();
       composites.push({ input: thumb, left: cellX, top: cellY });
@@ -88,23 +102,27 @@ export async function renderContactSheet(
     if (name) {
       composites.push({ input: name.data, left: cellX, top: cellY + imageH + 8 });
     }
-    const details = buildCaption(metadata[i] ?? {}, file).details;
-    const info = await renderText(details, 11, INK_SOFT, false, cellW);
-    if (info) {
-      composites.push({
-        input: info.data,
-        left: cellX,
-        top: cellY + imageH + 8 + (name?.height ?? 0) + 4,
-      });
+    if (withExif) {
+      const details = buildCaption(metadata[i] ?? {}, file).details;
+      const info = await renderText(details, 11, INK_SOFT, false, cellW);
+      if (info) {
+        composites.push({
+          input: info.data,
+          left: cellX,
+          top: cellY + imageH + 8 + (name?.height ?? 0) + 4,
+        });
+      }
     }
   }
 
-  await sharp({
+  const pipeline = sharp({
     create: { width, height, channels: 3, background: BG },
   })
     .composite(composites)
-    .jpeg({ quality: 90 })
-    .toFile(out);
+    .jpeg({ quality: 92, chromaSubsampling: "4:4:4" });
 
-  return { width, height, cells: files.length };
+  const buffer = await pipeline.toBuffer();
+  if (out) await sharp(buffer).toFile(out);
+
+  return { buffer, width, height, cells: files.length };
 }

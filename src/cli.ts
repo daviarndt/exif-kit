@@ -1069,15 +1069,18 @@ backups by default. Full docs: https://github.com/daviarndt/exifregistry`,
 
   program
     .command("contact")
-    .description("Render a contact sheet (thumbnail grid with EXIF labels) as one JPEG.")
+    .description("Render a contact sheet (thumbnail grid) as one JPEG or PDF.")
     .argument("<paths...>", "files, folders or glob patterns")
     .option("-c, --columns <n>", "thumbnails per row", "4")
     .option("--cell <px>", "width of each thumbnail cell", "320")
-    .option("-o, --out <file.jpg>", "output file (default: <name>-contact.jpg)")
+    .option("-f, --format <fmt>", "jpeg or pdf (inferred from --out if given)", "jpeg")
+    .option("--color <name|#hex>", "sheet background color", "off-white")
+    .option("--no-exif", "label thumbnails with the filename only, no EXIF line")
+    .option("-o, --out <file>", "output file (default: <folder>-contact next to the photos)")
     .option("-r, --recursive", "recurse into subfolders")
     .action(async (paths: string[], opts) => {
       const files = resolveFiles(paths, opts.recursive).filter(
-        (p) => !fields.isVideo(p),
+        (p) => !fields.isVideo(p) && !/-contact(_\d+)?\.(jpe?g|pdf)$/i.test(p),
       );
       if (files.length === 0) fail("No photos to lay out (videos are skipped).");
       const columns = Number(opts.columns);
@@ -1085,19 +1088,57 @@ backups by default. Full docs: https://github.com/daviarndt/exifregistry`,
       if (!Number.isFinite(columns) || !Number.isFinite(cellWidth)) {
         fail("--columns and --cell must be numbers.");
       }
-      const title = path.basename(path.resolve(paths[0]));
-      let out = opts.out ?? `${title.replace(/\.[^.]+$/, "")}-contact.jpg`;
-      if (!/\.jpe?g$/i.test(out)) fail(`Output must be a .jpg file (got "${out}").`);
-      for (let i = 1; fs.existsSync(out); i++) {
-        out = out.replace(/(_\d+)?\.jpe?g$/i, `_${i}.jpg`);
+
+      // Format: from --out extension if present, else --format.
+      let format: "jpeg" | "pdf";
+      if (opts.out && /\.pdf$/i.test(opts.out)) format = "pdf";
+      else if (opts.out && /\.jpe?g$/i.test(opts.out)) format = "jpeg";
+      else {
+        const f = String(opts.format).toLowerCase();
+        if (f !== "jpeg" && f !== "jpg" && f !== "pdf") {
+          fail(`Format must be jpeg or pdf (got "${opts.format}").`);
+        }
+        format = f === "pdf" ? "pdf" : "jpeg";
       }
+      const ext = format === "pdf" ? ".pdf" : ".jpg";
+
+      let background: string;
+      try {
+        background = resolveColor(opts.color).hex;
+      } catch (err) {
+        fail((err as Error).message);
+      }
+
+      // Default output lives next to the photos, not in the terminal's cwd.
+      const srcDir = path.dirname(path.resolve(files[0]));
+      const title = path.basename(srcDir);
+      let out =
+        opts.out ?? path.join(srcDir, `${title}-contact${ext}`);
+      if (!new RegExp(`\\${ext}$`, "i").test(out)) {
+        fail(`Output must be a ${ext} file for ${format} (got "${out}").`);
+      }
+      for (let i = 1; fs.existsSync(out); i++) {
+        out = out.replace(new RegExp(`(_\\d+)?\\${ext}$`, "i"), `_${i}${ext}`);
+      }
+
       const metadata = await engine.read(files);
-      const sheet = await renderContactSheet(files, metadata, out, {
-        columns,
-        cellWidth,
-        title,
-        onProgress: (c, t, f) => showProgress(c, t, f),
-      });
+      const sheet = await renderContactSheet(
+        files,
+        metadata,
+        format === "jpeg" ? out : null,
+        {
+          columns,
+          cellWidth,
+          title,
+          background,
+          exif: opts.exif,
+          onProgress: (c, t, f) => showProgress(c, t, f),
+        },
+      );
+      if (format === "pdf") {
+        const { jpegToPdf } = await import("./pdf.js");
+        fs.writeFileSync(out, jpegToPdf(sheet.buffer, sheet.width, sheet.height));
+      }
       clearProgress();
       recordHistory("contact", `contact sheet of ${sheet.cells} photos`, sheet.cells);
       printSuccess(

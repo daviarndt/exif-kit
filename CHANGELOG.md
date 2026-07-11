@@ -3,6 +3,16 @@
 All notable changes to exifregistry are documented here. This project follows
 [Semantic Versioning](https://semver.org).
 
+## [1.5.0]
+
+### Added
+
+- `contact` can output a high-resolution **PDF** (`-f pdf`), pick the sheet **color** (`--color`), and drop the EXIF line for filename-only labels (`--no-exif`).
+
+### Changed
+
+- `contact` writes the sheet **next to the photos** by default, instead of the terminal's current folder.
+
 ## [1.4.0]
 
 ### Added
