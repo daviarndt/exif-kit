@@ -71,6 +71,7 @@ jobs:
           git clone "https://x-access-token:${GH_TOKEN}@github.com/daviarndt/homebrew-tap.git" tap
           cd tap
           sed -i -E "s|exifregistry-[0-9.]+\.tgz|exifregistry-${VERSION}.tgz|" Formula/exifregistry.rb
+          sed -i -E "s|version \"[0-9.]+\"|version \"${VERSION}\"|" Formula/exifregistry.rb
           sed -i -E "s|sha256 \"[0-9a-f]+\"|sha256 \"${SHA}\"|" Formula/exifregistry.rb
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
